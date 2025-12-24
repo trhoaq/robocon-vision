@@ -1,0 +1,92 @@
+[
+  {
+    "name": "0",
+    "color": "#33ddff",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "1",
+    "color": "#fa3253",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "2",
+    "color": "#34d1b7",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "3",
+    "color": "#ff007c",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "4",
+    "color": "#ff6037",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "5",
+    "color": "#ddff33",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "6",
+    "color": "#24b353",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "7",
+    "color": "#b83df5",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "8",
+    "color": "#66ff66",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "9",
+    "color": "#32b7fa",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "10",
+    "color": "#ffcc33",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "11",
+    "color": "#83e070",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "12",
+    "color": "#fafa37",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "13",
+    "color": "#5986b3",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "14",
+    "color": "#aaf0d1",
+    "type": "rectangle",
+    "attributes": []
+  }
+]
