@@ -1,6 +1,6 @@
 MODEL:
   SSDS: ssd_lite
-  NETS: mobilenet_v2_torchvision
+  NETS: mobilenet_v2
   IMAGE_SIZE: [640, 360]
   NUM_CLASSES: 14
   FEATURE_LAYER: [[11, 17, 'S', 'S', 'S', 'S'], [96, 320, 512, 256, 256, 128]]
@@ -39,10 +39,11 @@ POST_PROCESS:
 
 DATASET:
   DATASET: 'voc'
-  DATASET_DIR: './data/custom'
-  TRAIN_SETS: [['custom','train']]
-  TEST_SETS:  [['custom', 'val']]
+  DATASET_DIR: './data/1/1'
+  TRAIN_SETS: [['','default']]
+  TEST_SETS:  [['','default']]
   PROB: 0.6
+  NUM_WORKERS: 0
 
 EXP_DIR: './experiments/exp'
 LOG_DIR: './experiments/log'

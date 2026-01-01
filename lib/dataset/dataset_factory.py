@@ -56,9 +56,7 @@ import torch.utils.data as data
 
 def load_data(cfg, phase):
     if phase == 'train':
-        from .dataset_augmentation import get_train_augmentation_pipeline
-        aug_pipeline = get_train_augmentation_pipeline(patch_size=cfg.IMAGE_SIZE[0])
-        dataset = dataset_map[cfg.DATASET](cfg.DATASET_DIR, cfg.TRAIN_SETS, preproc=None, augment_pipeline=aug_pipeline)
+        dataset = dataset_map[cfg.DATASET](cfg.DATASET_DIR, cfg.TRAIN_SETS, preproc(cfg.IMAGE_SIZE, cfg.PIXEL_MEANS, cfg.PROB))
         data_loader = data.DataLoader(dataset, cfg.TRAIN_BATCH_SIZE, num_workers=cfg.NUM_WORKERS,
                                   shuffle=True, collate_fn=detection_collate, pin_memory=True)
     if phase == 'eval':

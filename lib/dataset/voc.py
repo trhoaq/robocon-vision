@@ -16,7 +16,11 @@ else:
 
 
 VOC_CLASSES = ( '__background__', # always index 0
-    '0', '1', '2', '3','4', '5', '6', '7', '8','9', '10', '11', '12','13', '14')
+    'aeroplane', 'bicycle', 'bird', 'boat',
+    'bottle', 'bus', 'car', 'cat', 'chair',
+    'cow', 'diningtable', 'dog', 'horse',
+    'motorbike', 'person', 'pottedplant',
+    'sheep', 'sofa', 'train', 'tvmonitor')
 
 # for making bounding boxes pretty
 COLORS = ((255, 0, 0, 128), (0, 255, 0, 128), (0, 0, 255, 128),
@@ -115,11 +119,14 @@ class AnnotationTransform(object):
             pts = ['xmin', 'ymin', 'xmax', 'ymax']
             bndbox = []
             for i, pt in enumerate(pts):
-                cur_pt = int(bbox.find(pt).text) - 1
+                cur_pt = int(float(bbox.find(pt).text)) - 1
                 # scale height or width
                 #cur_pt = cur_pt / width if i % 2 == 0 else cur_pt / height
                 bndbox.append(cur_pt)
-            label_idx = self.class_to_ind[name]
+            try:
+                label_idx = self.class_to_ind[name]
+            except KeyError:
+                label_idx = int(name) + 1
             bndbox.append(label_idx)
             res = np.vstack((res,bndbox))  # [xmin, ymin, xmax, ymax, label_ind]
             # img_id = target.find('filename').text[:-4]
@@ -146,19 +153,18 @@ class VOCDetection(data.Dataset):
     """
 
     def __init__(self, root, image_sets, preproc=None, target_transform=AnnotationTransform(),
-                 dataset_name='VOC0712', augment_pipeline=None):
+                 dataset_name='VOC0712'):
         self.root = root
         self.image_set = image_sets
         self.preproc = preproc
         self.target_transform = target_transform
         self.name = dataset_name
-        self.augment_pipeline = augment_pipeline
         self._annopath = os.path.join('%s', 'Annotations', '%s.xml')
-        self._imgpath = os.path.join('%s', 'JPEGImages', '%s.jpg')
+        self._imgpath = os.path.join('%s', 'Image', '%s.jpg')
         self.ids = list()
         for (year, name) in image_sets:
             self._year = year
-            rootpath = os.path.join(self.root, 'VOC' + year)
+            rootpath = os.path.join(self.root, year)
             for line in open(os.path.join(rootpath, 'ImageSets', 'Main', name + '.txt')):
                 self.ids.append((rootpath, line.strip()))
 
@@ -172,24 +178,7 @@ class VOCDetection(data.Dataset):
             target = self.target_transform(target)
 
 
-        if self.augment_pipeline is not None:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            bboxes = target[:, :4]
-            labels = target[:, 4]
-
-            augmented = self.augment_pipeline(image=img, bboxes=bboxes, class_labels=labels)
-            img = augmented['image']
-            
-            new_bboxes = np.array(augmented['bboxes'], dtype=np.float32)
-            new_labels = np.array(augmented['class_labels'], dtype=np.int64)
-
-            if new_bboxes.shape[0] == 0:
-                target = np.zeros((0, 5), dtype=np.float32)
-            else:
-                new_labels = np.expand_dims(new_labels, axis=1)
-                target = np.hstack((new_bboxes, new_labels)).astype(np.float32)
-
-        elif self.preproc is not None:
+        if self.preproc is not None:
             img, target = self.preproc(img, target)
             #print(img.size())
 

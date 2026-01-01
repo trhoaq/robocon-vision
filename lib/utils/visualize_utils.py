@@ -87,9 +87,11 @@ def viz_module_feature_maps(writer, module, input_image, module_name='base', epo
         output_image = layer(output_image)
         feature_maps.append(output_image)
 
-    if mode is 'grid':
+    if mode == 'grid':
         pass
-    elif mode is 'one':
+    if mode == 'grid':
+        pass
+    elif mode == 'one':
         viz_feature_maps(writer, feature_maps, module_name, epoch, prefix)
 
     return output_image
@@ -103,9 +105,9 @@ def viz_module_grads(writer, model, module, input_image, target_image, target_me
         output_image = layer(output_image)
         feature_maps.append(output_image)
 
-    if mode is 'grid':
+    if mode == 'grid':
         pass
-    elif mode is 'one':
+    elif mode == 'one':
         viz_grads(writer, model, feature_maps, target_image, target_mean, module_name, epoch, prefix)
     
     return output_image

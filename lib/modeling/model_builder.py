@@ -38,7 +38,6 @@ networks_map = {
     'mobilenet_v2_075': mobilenet.mobilenet_v2_075,
     'mobilenet_v2_050': mobilenet.mobilenet_v2_050,
     'mobilenet_v2_025': mobilenet.mobilenet_v2_025,
-    'mobilenet_v2_torchvision': mobilenet.mobilenet_v2_torchvision,
     'darknet_19': darknet.darknet_19,
     'darknet_53': darknet.darknet_53,
 }

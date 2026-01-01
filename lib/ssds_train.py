@@ -15,14 +15,14 @@ import torch.nn.init as init
 
 from tensorboardX import SummaryWriter
 
-from lib.layers import *
-from lib.utils.timer import Timer
-from lib.utils.data_augment import preproc
-from lib.modeling.model_builder import create_model
-from lib.dataset.dataset_factory import load_data
-from lib.utils.config_parse import cfg
-from lib.utils.eval_utils import *
-from lib.utils.visualize_utils import *
+from .layers import *
+from .utils.timer import Timer
+from .utils.data_augment import preproc
+from .modeling.model_builder import create_model
+from .dataset.dataset_factory import load_data
+from .utils.config_parse import cfg
+from .utils.eval_utils import *
+from .utils.visualize_utils import *
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -55,13 +55,13 @@ class Solver(object):
         if self.use_gpu:
             print('Utilize GPUs for computation')
             print('Number of GPU available', torch.cuda.device_count())
-            self.model.cuda()
-            self.priors.cuda()
+            # self.model.cuda()
+            # self.priors.cuda()
             self.model = self.model.to(device)
             self.priors = self.priors.to(device)
             cudnn.benchmark = True
-            if torch.cuda.device_count() > 1:
-                self.model = torch.nn.DataParallel(self.model).module
+            # if torch.cuda.device_count() > 1:
+            # self.model = torch.nn.DataParallel(self.model).module
 
         # Print the model architecture and parameters
         print('Model architectures:\n{}\n'.format(self.model))

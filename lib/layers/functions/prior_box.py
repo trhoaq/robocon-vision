@@ -18,7 +18,7 @@ class PriorBox(object):
         # scale value
         if isinstance(scale[0], list):
             # get min of the result
-            self.scales = [min(s[0] / self.image_size[0], s[1] / self.image_size[1]) for s in scale]
+            self.scales = [min(s[0] / self.image_size[0], s[1] / self.image_size[1]) for s in scale] + [1.0]
         elif isinstance(scale[0], float) and len(scale) == 2:
             num_layers = len(feature_maps)
             min_scale, max_scale = scale
