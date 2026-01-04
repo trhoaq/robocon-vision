@@ -19,7 +19,8 @@ class ObjectDetector:
         # Build model
         print('===> Building model')
         self.model, self.priorbox = create_model(cfg.MODEL)
-        self.priors = Variable(self.priorbox.forward(), volatile=True)
+        with torch.no_grad():
+            self.priors = self.priorbox.forward()
 
         # Print the model architecture and parameters
         if viz_arch is True:
@@ -27,13 +28,13 @@ class ObjectDetector:
 
         # Utilize GPUs for computation
         self.use_gpu = torch.cuda.is_available()
-        self.device = torch.device('gpu') if torch.cuda.is_available() else torch.device('cpu')
+        self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         self.half = False
         if self.use_gpu:
             print('Utilize GPUs for computation')
             print('Number of GPU available', torch.cuda.device_count())
-            self.model.cuda()
-            self.priors.cuda()
+            self.model.to(self.device)
+            self.priors.to(self.device)
             cudnn.benchmark = True
             # self.model = torch.nn.DataParallel(self.model).module
             # Utilize half precision
@@ -51,7 +52,7 @@ class ObjectDetector:
             AssertionError('RESUME_CHECKPOINT can not be empty')
         print('=> loading checkpoint {:s}'.format(cfg.RESUME_CHECKPOINT))
         # checkpoint = torch.load(cfg.RESUME_CHECKPOINT)
-        checkpoint = torch.load(cfg.RESUME_CHECKPOINT, map_location='gpu' if self.use_gpu else 'cpu')
+        checkpoint = torch.load(cfg.RESUME_CHECKPOINT, map_location='cuda' if self.use_gpu else 'cpu')
         self.model.load_state_dict(checkpoint)
         # test only
         self.model.eval()
@@ -60,7 +61,7 @@ class ObjectDetector:
         assert img.shape[2] == 3
         scale = torch.Tensor([img.shape[1::-1], img.shape[1::-1]])
 
-        x = Variable(self.preprocessor(img)[0].unsqueeze(0)).to(self.device)
+        x = self.preprocessor(img)[0].unsqueeze(0).to(self.device)
 
         # forward
         out = self.model(x)  # forward pass

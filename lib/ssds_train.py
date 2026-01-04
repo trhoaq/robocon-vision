@@ -52,13 +52,15 @@ class Solver(object):
         # Utilize GPUs for computation
         self.use_gpu = torch.cuda.is_available()
         self.device = torch.device("cuda:0" if self.use_gpu else "cpu")
+        if not self.use_gpu:
+            print("GPU not found. You are using CPU version.")
         if self.use_gpu:
             print('Utilize GPUs for computation')
             print('Number of GPU available', torch.cuda.device_count())
             # self.model.cuda()
             # self.priors.cuda()
-            self.model = self.model.to(device)
-            self.priors = self.priors.to(device)
+            self.model = self.model.to(self.device)
+            self.priors = self.priors.to(self.device)
             cudnn.benchmark = True
             # if torch.cuda.device_count() > 1:
             # self.model = torch.nn.DataParallel(self.model).module
