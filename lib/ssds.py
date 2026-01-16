@@ -59,28 +59,27 @@ class ObjectDetector:
 
     def predict(self, img, threshold=0.6):
         assert img.shape[2] == 3
-        scale = torch.Tensor([img.shape[1::-1], img.shape[1::-1]])
+        height, width, _ = img.shape
+        scale = torch.Tensor([width, height, width, height]).to(self.device)
 
         x = self.preprocessor(img)[0].unsqueeze(0).to(self.device)
 
         # forward
         if self.half:
             x = x.half()
-        out = self.model(x)  # forward pass
-
-        print('before nms: ', out[0].size())
-        print(out[1].size())
-        detections = self.detector.forward(out)
-        print('detections: ', detections)
+        
+        with torch.no_grad():
+            out = self.model(x)  # forward pass
+            detections = self.detector.forward(out)
 
         # output
         labels, scores, coords = [list() for _ in range(3)]
-        # for batch in range(detections.size(0)):
-        #     print('Batch:', batch)
+        
         batch = 0
         for classes in range(detections.size(1)):
             num = 0
-            while detections[batch, classes, num, 0] >= threshold:
+            # Check if the number of detections is within bounds
+            while num < detections.size(2) and detections[batch, classes, num, 0] >= threshold:
                 scores.append(detections[batch, classes, num, 0])
                 labels.append(classes - 1)
                 coords.append(detections[batch, classes, num, 1:] * scale)

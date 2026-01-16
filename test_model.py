@@ -3,6 +3,7 @@ import cv2
 import argparse
 import sys
 import json
+import time
 
 from lib.ssds import ObjectDetector
 from lib.utils.config_parse import cfg_from_file
@@ -79,6 +80,10 @@ def camera_test(config_file):
         print("Error: Could not open camera.")
         return
 
+    # To calculate FPS
+    prev_frame_time = 0
+    new_frame_time = 0
+
     while True:
         # 4. Read frame from camera
         ret, frame = cap.read()
@@ -86,16 +91,33 @@ def camera_test(config_file):
             print("Error: Could not read frame from camera.")
             break
 
+        # Start timer after getting the frame
+        new_frame_time = time.time()
+
         # 5. Detect objects
         _labels, _scores, _coords = object_detector.predict(frame)
 
-        # 6. Draw bounding boxes
+        # 6. Draw bounding boxes and log detections
+        if len(_labels) > 0:
+            print("--- Frame Detections ---")
         for label, score, coords in zip(_labels, _scores, _coords):
             x1, y1, x2, y2 = int(coords[0]), int(coords[1]), int(coords[2]), int(coords[3])
             color = COLORS[label % len(COLORS)]
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-            text = f'{VOC_CLASSES[label]}: {score:.3f}'
+            class_name = VOC_CLASSES[label]
+            text = '{cls}: {score:.3f}'.format(cls=class_name, score=score)
             cv2.putText(frame, text, (x1, y1 - 10), FONT, 0.5, color, 2)
+            
+            # Log detected object to console
+            print('Detected: {cls} | Score: {score:.3f}'.format(cls=class_name, score=score))
+
+        # Calculate and display FPS
+        if prev_frame_time > 0:
+            fps = 1 / (new_frame_time - prev_frame_time)
+            cv2.putText(frame, "FPS: {:.2f}".format(fps), (10, 30), FONT, 1, (0, 255, 0), 2)
+        
+        prev_frame_time = new_frame_time
+
 
         # 7. Display the resulting frame
         cv2.imshow('Camera Feed', frame)
