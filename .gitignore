@@ -206,9 +206,4 @@ marimo/_lsp/
 __marimo__/
 
 # Models
-.pt
-.pth 
-.onnx
-data
-
-experiments/
+data/
