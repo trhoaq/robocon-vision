@@ -87,6 +87,7 @@ class Solver(object):
         self.output_dir = cfg.EXP_DIR
         self.checkpoint = cfg.RESUME_CHECKPOINT
         self.checkpoint_prefix = cfg.CHECKPOINTS_PREFIX
+        self.best_map = 0
 
     def save_checkpoints(self, epochs, iters=None):
         if not os.path.exists(self.output_dir):
@@ -102,6 +103,14 @@ class Solver(object):
         print('Wrote snapshot to: {:s}'.format(filename))
 
         # TODO: write relative cfg under the same page
+
+    def save_best_checkpoints(self):
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+        filename = 'best.pth'
+        filename = os.path.join(self.output_dir, filename)
+        torch.save(self.model.state_dict(), filename)
+
 
     def resume_checkpoint(self, resume_checkpoint):
         if resume_checkpoint == '' or not os.path.isfile(resume_checkpoint):
@@ -418,6 +427,9 @@ class Solver(object):
         log = '\r==>Eval: || Total_time: {time:.3f}s || loc_loss: {loc_loss:.4f} conf_loss: {conf_loss:.4f} || mAP: {mAP:.6f}\n'.format(
             mAP=ap,
             time=_t.total_time, loc_loss=loc_loss / epoch_size, conf_loss=conf_loss / epoch_size)
+        if ap > self.best_map:
+            self.best_map = ap
+            self.save_best_checkpoints()
         sys.stdout.write(log)
         sys.stdout.flush()
 

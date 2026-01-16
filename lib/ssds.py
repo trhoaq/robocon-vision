@@ -64,6 +64,8 @@ class ObjectDetector:
         x = self.preprocessor(img)[0].unsqueeze(0).to(self.device)
 
         # forward
+        if self.half:
+            x = x.half()
         out = self.model(x)  # forward pass
 
         print('before nms: ', out[0].size())

@@ -88,5 +88,23 @@
     "color": "#aaf0d1",
     "type": "rectangle",
     "attributes": []
+  },
+    {
+    "name": "h",
+    "color": "#3d3df5",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "f",
+    "color": "#733380",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "s",
+    "color": "#f59331",
+    "type": "rectangle",
+    "attributes": []
   }
 ]
