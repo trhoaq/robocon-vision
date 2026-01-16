@@ -92,6 +92,9 @@ __C.TRAIN.BATCH_SIZE = 128
 __C.TRAIN.TRAINABLE_SCOPE = 'base,extras,norm,loc,conf'
 __C.TRAIN.RESUME_SCOPE = ''
 
+# whether to finetune from a checkpoint, if True, it will start from epoch 0
+__C.TRAIN.FINETUNE = False
+
 # ---------------------------------------------------------------------------- #
 # optimizer options
 # ---------------------------------------------------------------------------- #

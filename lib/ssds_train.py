@@ -226,12 +226,15 @@ class Solver(object):
         return trainable_param
 
     def train_model(self):
-        previous = self.find_previous()
-        if previous:
-            start_epoch = previous[0][-1]
-            self.resume_checkpoint(previous[1][-1])
-        else:
+        if cfg.TRAIN.FINETUNE:
             start_epoch = self.initialize()
+        else:
+            previous = self.find_previous()
+            if previous:
+                start_epoch = previous[0][-1]
+                self.resume_checkpoint(previous[1][-1])
+            else:
+                start_epoch = self.initialize()
 
         # export graph for the model, onnx always not works
         # self.export_graph()
@@ -241,11 +244,11 @@ class Solver(object):
         for epoch in iter(range(start_epoch + 1, self.max_epochs + 1)):
             # learning rate
             sys.stdout.write('\rEpoch {epoch:d}/{max_epochs:d}:\n'.format(epoch=epoch, max_epochs=self.max_epochs))
-            if epoch > warm_up:
-                self.exp_lr_scheduler.step(epoch - warm_up)
             if 'train' in cfg.PHASE:
                 self.train_epoch(self.model, self.train_loader, self.optimizer, self.criterion, self.writer, epoch,
                                  self.use_gpu)
+            if epoch > warm_up:
+                self.exp_lr_scheduler.step(epoch - warm_up)
             if 'eval' in cfg.PHASE:
                 self.eval_epoch(self.model, self.eval_loader, self.detector, self.criterion, self.writer, epoch,
                                 self.use_gpu)

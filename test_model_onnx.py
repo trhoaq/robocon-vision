@@ -81,7 +81,7 @@ class ONNXObjectDetector:
         scale = torch.Tensor([width, height, width, height]).to(self.device)
 
         x_preprocessed = self.preprocessor(img)[0].unsqueeze(0)
-        x = torch.from_numpy(x_preprocessed).to(self.device)
+        x = x_preprocessed.to(self.device)
 
         # ONNX forward pass
         ort_inputs = {self.ort_session.get_inputs()[0].name: to_numpy(x)}
