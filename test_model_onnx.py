@@ -7,8 +7,9 @@ import time
 
 import onnx
 import onnxruntime
-from onnxruntime.quantization import quantize_dynamic, QuantType
+from onnxruntime.quantization import quantize_static, QuantType, shape_inference
 import torch
+import numpy as np
 # from lib.ssds import ObjectDetector
 from lib.utils.config_parse import cfg_from_file
 from lib.utils.config_parse import cfg
@@ -18,6 +19,28 @@ from lib.layers import Detect
 
 def to_numpy(tensor):
     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+class CalibrationDataReader:
+    def __init__(self, cfg, preprocessor):
+        self.preprocessor = preprocessor
+        self.h = 360
+        self.w = 640
+        self.input_name = 'input'
+        self.call_count = 0
+        self.num_samples = 10
+
+    def get_next(self):
+        if self.call_count >= self.num_samples:
+            return None
+
+        # Generate random image
+        img = (np.random.rand(self.h, self.w,3) * 255).astype(np.uint8)
+
+        # Preprocess the image
+        x_preprocessed = self.preprocessor(img)[0].unsqueeze(0).cpu().numpy()
+
+        self.call_count += 1
+        return {self.input_name: x_preprocessed}
 
 class ONNXObjectDetector:
     def __init__(self, viz_arch=False):
@@ -47,21 +70,23 @@ class ONNXObjectDetector:
         else:
             print(f"Found existing ONNX model at {self.onnx_path}")
 
+        # --- Post-processor setup needs to be before quantization for calibration ---
+        self.preprocessor = preproc(cfg.MODEL.IMAGE_SIZE, cfg.DATASET.PIXEL_MEANS, -2)
+        
         # --- ONNX Quantization ---
         self.quantize_to_int8()
 
         # --- ONNX Runtime Session Loading ---
         print("===> Loading ONNX model for inference")
-        self.ort_session = onnxruntime.InferenceSession(self.onnx_path)
+        self.ort_session = onnxruntime.InferenceSession(self.onnx_path,providers=['CPUExecutionProvider']	)
 
-        # --- Post-processor setup ---
-        self.preprocessor = preproc(cfg.MODEL.IMAGE_SIZE, cfg.DATASET.PIXEL_MEANS, -2)
+        # --- Detector setup ---
         self.detector = Detect(cfg.POST_PROCESS, self.priors)
 
 
     def export_to_onnx(self):
         img_size = self.cfg.MODEL.IMAGE_SIZE
-        dummy_input = torch.randn(1, 3, img_size[0], img_size[1], device=self.device)
+        dummy_input = torch.randn(1, 3, img_size[1], img_size[0], device=self.device)
         
         output_names = ['loc', 'conf']
         
@@ -69,7 +94,7 @@ class ONNXObjectDetector:
                           dummy_input,
                           self.onnx_path,
                           export_params=True,
-                          opset_version=11,
+                          opset_version=13,
                           do_constant_folding=True,
                           input_names=['input'],
                           output_names=output_names,
@@ -82,15 +107,30 @@ class ONNXObjectDetector:
     def quantize_to_int8(self):
         print("===> Quantizing ONNX model to INT8")
         onnx_int8_path = os.path.splitext(self.onnx_path)[0] + "_int8.onnx"
+        onnx_preprocessed_path = os.path.splitext(self.onnx_path)[0] + "_preprocessed.onnx"
+
         if not os.path.exists(onnx_int8_path):
-            quantize_dynamic(model_input=self.onnx_path,
-                             model_output=onnx_int8_path,
-                             weight_type=QuantType.QInt8)
+            print("Preprocessing model for quantization...")
+            # Step 1: Pre-process (Required to avoid ConvInteger errors)
+            shape_inference.quant_pre_process(self.onnx_path, onnx_preprocessed_path)
+            
+            print("Performing static quantization...")
+            calibration_data_reader = self.create_calibration_data_reader()
+            
+            # Step 2: Quantize the pre-processed model
+            quantize_static(
+                model_input=onnx_preprocessed_path,
+                model_output=onnx_int8_path,
+                calibration_data_reader=calibration_data_reader,
+                activation_type=QuantType.QUInt8, # Explicitly set activation type
+                weight_type=QuantType.QInt8
+            )
             print(f"Quantized model saved to {onnx_int8_path}")
-            self.onnx_path = onnx_int8_path
-        else:
-            print(f"Found existing quantized model at {onnx_int8_path}")
-            self.onnx_path = onnx_int8_path
+        
+        self.onnx_path = onnx_int8_path
+
+    def create_calibration_data_reader(self):
+        return CalibrationDataReader(self.cfg, self.preprocessor)
 
 
     def predict(self, img, threshold=0.6):
