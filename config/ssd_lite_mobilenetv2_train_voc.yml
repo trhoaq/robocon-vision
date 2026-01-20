@@ -47,5 +47,5 @@ DATASET:
 
 EXP_DIR: './experiments/exp'
 LOG_DIR: './experiments/log'
-RESUME_CHECKPOINT: './experiments/models/mobilenet_v2_ssd_lite_voc.pth'
+RESUME_CHECKPOINT: './experiments/models/ssd_lite_mobilenet_v2_voc.pth'
 PHASE: ['train']

@@ -7,6 +7,7 @@ import time
 
 import onnx
 import onnxruntime
+from onnxruntime.quantization import quantize_dynamic, QuantType
 import torch
 # from lib.ssds import ObjectDetector
 from lib.utils.config_parse import cfg_from_file
@@ -46,6 +47,9 @@ class ONNXObjectDetector:
         else:
             print(f"Found existing ONNX model at {self.onnx_path}")
 
+        # --- ONNX Quantization ---
+        self.quantize_to_int8()
+
         # --- ONNX Runtime Session Loading ---
         print("===> Loading ONNX model for inference")
         self.ort_session = onnxruntime.InferenceSession(self.onnx_path)
@@ -73,6 +77,20 @@ class ONNXObjectDetector:
                                         'loc' : {0 : 'batch_size'},
                                         'conf' : {0 : 'batch_size'}})
         print(f"ONNX model exported to {self.onnx_path}")
+
+
+    def quantize_to_int8(self):
+        print("===> Quantizing ONNX model to INT8")
+        onnx_int8_path = os.path.splitext(self.onnx_path)[0] + "_int8.onnx"
+        if not os.path.exists(onnx_int8_path):
+            quantize_dynamic(model_input=self.onnx_path,
+                             model_output=onnx_int8_path,
+                             weight_type=QuantType.QInt8)
+            print(f"Quantized model saved to {onnx_int8_path}")
+            self.onnx_path = onnx_int8_path
+        else:
+            print(f"Found existing quantized model at {onnx_int8_path}")
+            self.onnx_path = onnx_int8_path
 
 
     def predict(self, img, threshold=0.6):
